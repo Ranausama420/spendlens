@@ -1,0 +1,30 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: spendlens
+      POSTGRES_DB: spendlens
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local-demo-only}
+    volumes:
+      - pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "spendlens"]
+      interval: 3s
+      timeout: 3s
+      retries: 15
+  app:
+    build: .
+    environment:
+      PGHOST: db
+      PGUSER: spendlens
+      PGDATABASE: spendlens
+      PGPASSWORD: ${POSTGRES_PASSWORD:-local-demo-only}
+      SPENDLENS_DEMO: ${SPENDLENS_DEMO:-1}
+      SPENDLENS_TOKEN: ${SPENDLENS_TOKEN:-}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:8008:8000"
+volumes:
+  pg:
